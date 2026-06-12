@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AccessTwin — See the cascade before you sign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@90,400..900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='%23E1242A'/><circle cx='50' cy='50' r='18' fill='white'/></svg>">
+<style>
+/* ============================ tokens ============================ */
+:root{
+  --paper:#FCFBF8; --paper-2:#F6F4EE; --ink:#14181E; --muted:#5A6271; --faint:#9AA0AC;
+  --line:#E8E5DD; --line-strong:#D6D2C7;
+  --crimson:#E1242A; --crimson-deep:#B3151B; --crimson-wash:#FCEBEC;
+  --safe:#0B7A55; --warn:#B97A00; --risk:#C2202B;
+  --display:"Archivo",sans-serif; --body:"Inter",sans-serif; --mono:"IBM Plex Mono",monospace;
+  --max:1180px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body); color:var(--ink); background:var(--paper);
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle, #E9E6DE 1px, transparent 1px);
+  background-size:26px 26px;
+}
+::selection{background:var(--crimson); color:#fff}
+.wrap{max-width:var(--max); margin:0 auto; padding:0 36px}
+.mono{font-family:var(--mono)}
+.eyebrow{
+  font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--crimson-deep); display:flex; align-items:center; gap:14px;
+}
+.eyebrow::after{content:""; width:54px; height:1px; background:var(--crimson)}
+h1,h2{font-family:var(--display); font-stretch:90%; letter-spacing:-.025em; line-height:1.02; font-weight:800}
+h2{font-size:clamp(30px,4vw,46px); margin:18px 0 0}
+h2 em{font-style:normal; color:var(--crimson)}
+.lede{font-size:18px; color:var(--muted); max-width:620px; margin-top:18px}
+
+/* ============================ topbar ============================ */
+.topbar{
+  position:sticky; top:0; z-index:40; backdrop-filter:blur(10px);
+  background:rgba(252,251,248,.85); border-bottom:1px solid var(--line);
+}
+.topbar .wrap{display:flex; align-items:center; gap:14px; height:62px}
+.mark{width:22px;height:22px;border-radius:50%;background:var(--crimson);position:relative;flex:none}
+.mark::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--paper)}
+.brand{font-family:var(--display);font-stretch:90%;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand b{color:var(--crimson)}
+.topnav{margin-left:auto; display:flex; gap:26px}
+.topnav a{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .15s}
+.topnav a:hover{color:var(--ink)}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint);border:1px solid var(--line);border-radius:99px;padding:4px 11px}
+
+/* ============================ hero ============================ */
+.hero{padding:90px 0 70px; overflow:hidden}
+.hero-grid{display:grid; grid-template-columns:minmax(380px,1fr) minmax(420px,1.1fr); gap:60px; align-items:center}
+.hero h1{font-size:clamp(42px,5.4vw,72px)}
+.hero h1 .strike{position:relative; white-space:nowrap}
+.hero h1 .strike i{font-style:normal; position:relative}
+.hero h1 em{font-style:normal; color:var(--crimson)}
+.hero .lede{font-size:19px; margin-top:24px}
+.hero-cta{margin-top:36px; display:flex; align-items:center; gap:22px; flex-wrap:wrap}
+.btn{
+  display:inline-flex; align-items:center; gap:10px; font-family:var(--display); font-stretch:90%;
+  font-weight:700; font-size:15px; background:var(--ink); color:#fff; border:none; cursor:pointer;
+  padding:15px 26px; border-radius:12px; text-decoration:none; transition:transform .15s, background .15s;
+}
+.btn:hover{background:var(--crimson); transform:translateY(-1px)}
+.btn .arr{font-family:var(--mono)}
+.hero-note{font-family:var(--mono); font-size:11.5px; color:var(--faint)}
+
+/* live cascade panel */
+.cascade-panel{
+  border:1px solid var(--line); border-radius:18px; background:#fff;
+  box-shadow:0 30px 60px -30px rgba(20,24,30,.18); overflow:hidden; position:relative;
+}
+.cp-head{display:flex; justify-content:space-between; align-items:center; padding:13px 18px; border-bottom:1px solid var(--line)}
+.cp-head .t{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint)}
+.cp-live{display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10.5px; color:var(--crimson-deep)}
+.cp-live .dot{width:7px;height:7px;border-radius:50%;background:var(--crimson); animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.cp-svg{display:block; width:100%; height:auto}
+.cp-foot{
+  display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+  padding:14px 18px; border-top:1px solid var(--line); background:var(--paper);
+}
+.cp-foot .lab{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)}
+.cp-foot .val{font-family:var(--mono); font-size:21px; font-weight:600; color:var(--risk)}
+.cp-foot .sub{font-family:var(--mono); font-size:11px; color:var(--muted)}
+
+/* svg node + edge styles */
+.nd circle{fill:#fff; stroke:var(--line-strong); stroke-width:1.4; transition:stroke .5s, fill .5s}
+.nd text{font-family:var(--mono)}
+.nd .code{font-size:10px; font-weight:600; fill:var(--ink)}
+.nd .price{font-size:9.5px; fill:var(--muted)}
+.nd.s-anchor circle{fill:var(--crimson); stroke:var(--crimson)}
+.nd.s-anchor .code{fill:#fff}
+.nd.s-watch circle{stroke:var(--warn)} .nd.s-watch .price{fill:var(--warn); font-weight:600}
+.nd.s-risk circle{stroke:var(--risk)}  .nd.s-risk .price{fill:var(--risk); font-weight:600}
+.edge{fill:none; stroke:var(--crimson); stroke-width:1.3; stroke-opacity:0; }
+.edge.fire{stroke-opacity:.55; animation:draw 1s ease-out forwards}
+@keyframes draw{from{stroke-dashoffset:var(--len)} to{stroke-dashoffset:0}}
+.ring{fill:none; stroke:var(--crimson); stroke-width:1.5; opacity:0}
+.ring.fire{animation:ring 1.1s ease-out forwards}
+@keyframes ring{0%{opacity:.7; r:9} 100%{opacity:0; r:26}}
+
+/* ============================ sections ============================ */
+section{padding:96px 0; position:relative}
+section + section{border-top:1px solid var(--line)}
+.sec-head{max-width:760px}
+
+/* problem */
+.prob-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-top:56px; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff}
+.prob{padding:30px 28px; border-right:1px solid var(--line); transition:background .2s}
+.prob:last-child{border-right:none}
+.prob:hover{background:var(--paper)}
+.prob .k{font-family:var(--mono); font-size:11px; color:var(--crimson-deep); letter-spacing:.1em}
+.prob h3{font-family:var(--display); font-stretch:90%; font-size:19.5px; font-weight:700; letter-spacing:-.01em; margin:12px 0 10px; line-height:1.25}
+.prob p{font-size:14.5px; color:var(--muted)}
+.basket-strip{
+  margin-top:30px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:12px; color:var(--muted);
+}
+.chip{border:1px solid var(--line-strong); border-radius:8px; padding:6px 11px; background:#fff}
+.chip b{color:var(--ink); font-weight:600}
+.basket-strip .a{color:var(--crimson)}
+
+/* impact */
+.impact-wrap{display:grid; grid-template-columns:1fr 380px; gap:60px; margin-top:56px; align-items:start}
+.impact-list{display:flex; flex-direction:column}
+.impact{
+  display:grid; grid-template-columns:46px 1fr; gap:20px; padding:26px 4px;
+  border-bottom:1px solid var(--line); opacity:0; transform:translateY(14px);
+  transition:opacity .55s ease, transform .55s ease;
+}
+.impact.show{opacity:1; transform:none}
+.impact:first-child{border-top:1px solid var(--line)}
+.impact .ico{
+  width:46px;height:46px;border:1px solid var(--line-strong);border-radius:12px;background:#fff;
+  display:grid;place-items:center;font-family:var(--mono);font-size:18px;color:var(--crimson-deep);
+}
+.impact h3{font-family:var(--display);font-stretch:90%;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.impact p{font-size:14.5px;color:var(--muted);margin-top:5px;max-width:560px}
+.ratchet{
+  border:1px solid var(--line); border-radius:16px; background:#fff; padding:22px 22px 16px;
+  position:sticky; top:96px;
+}
+.ratchet .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.ratchet svg{display:block;width:100%;height:auto;margin-top:10px}
+.ratchet .cap{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}
+.r-step{fill:none;stroke:var(--risk);stroke-width:2}
+.r-base{fill:none;stroke:var(--line-strong);stroke-width:1;stroke-dasharray:3 4}
+.r-lab{font-family:var(--mono);font-size:9px;fill:var(--faint)}
+
+/* solution */
+.sol{background:#fff}
+.sol-steps{margin-top:64px; display:flex; flex-direction:column}
+.sstep{
+  display:grid; grid-template-columns:120px 1fr 360px; gap:40px; padding:44px 0;
+  border-top:1px solid var(--line); align-items:start;
+  opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease;
+}
+.sstep.show{opacity:1; transform:none}
+.sstep:last-child{border-bottom:1px solid var(--line)}
+.snum{font-family:var(--mono); font-size:13px; color:var(--faint)}
+.snum b{display:block; font-size:34px; font-weight:600; color:var(--crimson); letter-spacing:-.02em; line-height:1}
+.snum span{display:block; margin-top:8px; letter-spacing:.14em; text-transform:uppercase; font-size:9.5px}
+.sstep h3{font-family:var(--display);font-stretch:90%;font-size:24px;font-weight:750;letter-spacing:-.015em;line-height:1.15}
+.sstep .sd{color:var(--muted);font-size:15px;margin-top:12px;max-width:520px}
+.sstep .sd b{color:var(--ink);font-weight:600}
+.svis{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:18px;min-height:120px}
+.svis .vt{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+
+/* step visuals */
+.v-scope{display:flex;flex-wrap:wrap;gap:7px}
+.v-scope span{font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid var(--line-strong);background:#fff;color:var(--muted)}
+.v-scope span.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.v-scope span.an{background:var(--crimson);border-color:var(--crimson);color:#fff}
+
+.v-slider .track{height:6px;border-radius:4px;background:linear-gradient(90deg,var(--risk),var(--warn) 45%,var(--safe));position:relative;margin:18px 4px 26px}
+.v-slider .knob{position:absolute;top:50%;left:38%;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--ink);transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.2);animation:slide 5s ease-in-out infinite}
+@keyframes slide{0%,100%{left:62%}50%{left:34%}}
+.v-slider .rows{display:flex;flex-direction:column;gap:7px}
+.v-slider .row{display:grid;grid-template-columns:34px 1fr 52px;gap:10px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.v-slider .bar{height:5px;border-radius:3px;background:var(--paper-2);overflow:hidden;position:relative}
+.v-slider .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;animation:breath 5s ease-in-out infinite}
+@keyframes breath{0%,100%{width:var(--w1)}50%{width:var(--w2)}}
+.v-slider .pc{text-align:right}
+
+.v-agents{display:flex;flex-direction:column;gap:8px}
+.v-agents .ag{display:flex;align-items:center;gap:10px;font-size:12.5px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px}
+.v-agents .ic{font-family:var(--mono);width:22px;height:22px;border-radius:6px;background:var(--paper-2);display:grid;place-items:center;font-size:11px;color:var(--crimson-deep);flex:none}
+.v-agents .st{margin-left:auto;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--faint)}
+.v-agents .ag.live{border-color:var(--crimson)}
+.v-agents .ag.live .st{color:var(--crimson)}
+
+.v-corr{position:relative;height:84px;margin-top:6px}
+.v-corr .tr{position:absolute;left:4px;right:4px;top:38px;height:7px;border-radius:4px;background:linear-gradient(90deg,var(--risk) 0 18%,var(--warn) 18% 42%,var(--safe) 42%)}
+.v-corr .mk{position:absolute;top:6px;transform:translateX(-50%);text-align:center}
+.v-corr .mk .l{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.v-corr .mk .v{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.v-corr .mk .ln{width:2px;height:18px;background:var(--ink);margin:5px auto 0}
+.v-corr .mk.red .v{color:var(--risk)} .v-corr .mk.red .ln{background:var(--risk)}
+
+/* closing */
+.close-strip{padding:110px 0; text-align:center}
+.close-strip h2{font-size:clamp(34px,4.6vw,56px)}
+.close-strip .lede{margin:20px auto 0}
+.close-strip .hero-cta{justify-content:center}
+footer{border-top:1px solid var(--line); padding:26px 0}
+footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--faint)}
+
+/* reveal helper */
+.rev{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease}
+.rev.show{opacity:1; transform:none}
+
+@media (max-width:1020px){
+  .hero-grid{grid-template-columns:1fr; gap:44px}
+  .impact-wrap{grid-template-columns:1fr}
+  .ratchet{position:static}
+  .sstep{grid-template-columns:80px 1fr; }
+  .sstep .svis{grid-column:2}
+}
+@media (max-width:720px){
+  .wrap{padding:0 22px}
+  .prob-grid{grid-template-columns:1fr}
+  .prob{border-right:none;border-bottom:1px solid var(--line)}
+  .prob:last-child{border-bottom:none}
+  .sstep{grid-template-columns:1fr; gap:18px}
+  .sstep .svis{grid-column:1}
+  .topnav{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+  .rev,.impact,.sstep{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="mark" aria-hidden="true"></span>
+    <span class="brand">Access<b>Twin</b></span>
+    <nav class="topnav">
+      <a href="#problem">Problem</a>
+      <a href="#impact">Impact</a>
+      <a href="#solution">Solution</a>
+    </nav>
+    <span class="tag">PROOF OF CONCEPT</span>
+  </div>
+</header>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Global price architecture twin</p>
+      <h1>One price.<br><em>Every market.</em></h1>
+      <p class="lede">When a medicine's price moves in one country, dozens of others follow it
+        automatically — through formulas, on a delay, and in one direction.
+        AccessTwin lets you see and steer that cascade <b>before</b> you sign.</p>
+      <div class="hero-cta">
+        <a class="btn" href="#solution">How it works <span class="arr">→</span></a>
+        <span class="hero-note">live simulation running →</span>
+      </div>
+    </div>
+
+    <div class="cascade-panel" aria-label="Animated simulation of a price cascade across markets">
+      <div class="cp-head">
+        <span class="t">Reference-pricing network · simulated</span>
+        <span class="cp-live"><span class="dot"></span>CASCADE</span>
+      </div>
+      <svg class="cp-svg" id="net" viewBox="0 0 560 330" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="cp-foot">
+        <div>
+          <p class="lab">Anchor concession</p>
+          <p class="sub" id="anchorRead">$10,000 → $10,000</p>
+        </div>
+        <div style="text-align:right">
+          <p class="lab">10-yr value at risk</p>
+          <p class="val" id="npvRead">−$0M</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PROBLEM ============================ -->
+<section id="problem">
+  <div class="wrap">
+    <div class="sec-head rev">
+      <p class="eyebrow">The problem</p>
+      <h2>Launch prices don't stay<br>where you set them.</h2>
+      <p class="lede">Most health systems don't price a new medicine from scratch. They reference the
+        published prices of other countries — each with its own basket, formula, and revision clock.
+        Because those baskets overlap, the world's markets behave as <b>one connected system</b>.</p>
+    </div>
+
+    <div class="basket-strip rev">
+      <span class="chip a"><b>Anchor market</b> sets a visible price</span>
+      <span>→</span>
+      <span class="chip">referenced by <b>basket A</b></span>
+      <span>→</span>
+      <span class="chip">which feeds <b>baskets B &amp; C</b></span>
+      <span>→</span>
+      <span class="chip">which re-enter <b>basket A</b> at the next revision</span>
+    </div>
+
+    <div class="prob-grid rev">
+      <div class="prob">
+        <p class="k">DECISIONS ARE LOCAL —</p>
+        <h3>consequences are global.</h3>
+        <p>Each negotiation is run by one team, against one payer, on one country's terms.
+           But the price they agree enters reference baskets read by many other systems.
+           Nobody at the table owns the network effect.</p>
+      </div>
+      <div class="prob">
+        <p class="k">THE CASCADE IS —</p>
+        <h3>invisible at the table.</h3>
+        <p>The rules are public, but tracing a single concession through overlapping baskets,
+           corridors, medians and second-order loops is beyond any spreadsheet —
+           especially live, mid-negotiation, when the counter-offer is on the table.</p>
+      </div>
+      <div class="prob">
+        <p class="k">IT ARRIVES LATE —</p>
+        <h3>and only moves one way.</h3>
+        <p>Referenced prices update months later, on each country's own cycle.
+           And they ratchet: floors propagate downward through the network,
+           almost never back up. By the time the effect is visible, it's contractual.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ IMPACT ============================ -->
+<section id="impact">
+  <div class="wrap">
+    <div class="sec-head rev">
+      <p class="eyebrow">Why it matters</p>
+      <h2>Small concessions compound<br>into <em>structural</em> loss.</h2>
+    </div>
+
+    <div class="impact-wrap">
+      <div class="impact-list">
+        <div class="impact">
+          <span class="ico">Σ</span>
+          <div>
+            <h3>Global value erosion</h3>
+            <p>A single-digit discount in one market can compound, through referencing,
+               into a double-digit share of a product's ten-year global value —
+               quietly, market by market.</p>
+          </div>
+        </div>
+        <div class="impact">
+          <span class="ico">⇩</span>
+          <div>
+            <h3>Permanent price floors</h3>
+            <p>Reference baskets remember. Once a low price is publicly visible it becomes
+               the ceiling elsewhere, and it stays in the system through every future
+               revision cycle — for the life of the product.</p>
+          </div>
+        </div>
+        <div class="impact">
+          <span class="ico">◔</span>
+          <div>
+            <h3>Distorted launch sequencing</h3>
+            <p>To protect the network, launches in lower-priced markets get delayed or
+               skipped entirely. Commercial defence turns into an access problem:
+               patients wait because of a formula.</p>
+          </div>
+        </div>
+        <div class="impact">
+          <span class="ico">?</span>
+          <div>
+            <h3>Negotiating without a computed red line</h3>
+            <p>Payers know the referencing math; most negotiation teams defend positions
+               with judgment alone. Without a walk-away point derived from global value,
+               every concession is a guess.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="ratchet rev" aria-label="Diagram: prices ratchet downward through revision cycles">
+        <p class="t">The ratchet — list price over revision cycles</p>
+        <svg viewBox="0 0 320 190" xmlns="http://www.w3.org/2000/svg">
+          <line class="r-base" x1="14" y1="34" x2="306" y2="34"/>
+          <text class="r-lab" x="14" y="26">launch price</text>
+          <path class="r-step" d="M14,34 H72 V62 H128 V96 H188 V118 H244 V146 H306" stroke-linejoin="round"/>
+          <g class="r-lab" text-anchor="middle">
+            <text x="72"  y="178">rev 1</text>
+            <text x="128" y="178">rev 2</text>
+            <text x="188" y="178">rev 3</text>
+            <text x="244" y="178">rev 4</text>
+          </g>
+          <text class="r-lab" x="306" y="160" text-anchor="end" fill="#C2202B">no path back up</text>
+        </svg>
+        <p class="cap">Each revision re-reads the baskets. Concessions propagate down the steps;
+          nothing in the mechanism carries a price back up.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SOLUTION ============================ -->
+<section id="solution" class="sol">
+  <div class="wrap">
+    <div class="sec-head rev">
+      <p class="eyebrow">The solution</p>
+      <h2>A digital twin of your<br>global price architecture.</h2>
+      <p class="lede">AccessTwin models every market's referencing rule as one live system —
+        then puts adversarial AI on top of it, so the cascade is tested in simulation
+        instead of discovered in the market.</p>
+    </div>
+
+    <div class="sol-steps">
+
+      <div class="sstep">
+        <div class="snum"><b>01</b><span>Configure</span></div>
+        <div>
+          <h3>Set up the launch you want to test</h3>
+          <p class="sd">Choose the asset, the expected <b>HTA benefit rating</b> (which sets the
+             achievable target price), and the markets in scope — directly on a world map.
+             The anchor market is where the first negotiation happens; everything downstream
+             will react to it.</p>
+        </div>
+        <div class="svis">
+          <p class="vt">Markets in scope</p>
+          <div class="v-scope">
+            <span class="an">DE · anchor</span><span class="on">GB</span><span class="on">FR</span>
+            <span class="on">ES</span><span class="on">IT</span><span class="on">NL</span>
+            <span class="on">CA</span><span class="on">JP</span><span>AU</span>
+            <span class="on">BR</span><span>KR</span><span class="on">CH</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sstep">
+        <div class="snum"><b>02</b><span>Simulate</span></div>
+        <div>
+          <h3>Drag one price — watch the world reprice</h3>
+          <p class="sd">A <b>fixed-point solver</b> encodes each market's actual referencing rule —
+             lowest-of-basket, basket averages, medians, price corridors, payer-expectation
+             elasticity — and resolves every interdependent floor in milliseconds.
+             A live map shows where erosion lands; a ticker prices the
+             <b>ten-year value at risk</b> as you move the slider.</p>
+        </div>
+        <div class="svis v-slider">
+          <p class="vt">Anchor price ↔ market floors</p>
+          <div class="track"><div class="knob"></div></div>
+          <div class="rows">
+            <div class="row"><span>FR</span><span class="bar"><i style="--w1:34%;--w2:78%;background:var(--risk)"></i></span><span class="pc" style="color:var(--risk)">−16%</span></div>
+            <div class="row"><span>ES</span><span class="bar"><i style="--w1:30%;--w2:70%;background:var(--risk)"></i></span><span class="pc" style="color:var(--risk)">−15%</span></div>
+            <div class="row"><span>CA</span><span class="bar"><i style="--w1:22%;--w2:48%;background:var(--warn)"></i></span><span class="pc" style="color:var(--warn)">−9%</span></div>
+            <div class="row"><span>JP</span><span class="bar"><i style="--w1:12%;--w2:30%;background:var(--safe)"></i></span><span class="pc" style="color:var(--safe)">−4%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sstep">
+        <div class="snum"><b>03</b><span>Stress-test</span></div>
+        <div>
+          <h3>Convene an AI war room that argues back</h3>
+          <p class="sd">Six specialist agents work <b>in the open</b> — every thought, tool call and
+             handoff streamed live, not just a final answer. Policy research scans the current
+             rule environment; a cascade analyst traces propagation paths; an <b>adversarial
+             panel of payer-committee personas</b> counter-offers with each committee's own
+             documented logic; a value modeler binary-searches the breaking point.</p>
+        </div>
+        <div class="svis">
+          <p class="vt">Agent pipeline · streaming</p>
+          <div class="v-agents">
+            <div class="ag"><span class="ic">◎</span>Mission Control<span class="st">DONE ✓</span></div>
+            <div class="ag"><span class="ic">⌖</span>Policy Research<span class="st">DONE ✓</span></div>
+            <div class="ag live"><span class="ic">⚖</span>Adversarial Payer Panel<span class="st">WORKING…</span></div>
+            <div class="ag"><span class="ic">♟</span>Negotiation Strategist<span class="st">QUEUED</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sstep">
+        <div class="snum"><b>04</b><span>Decide</span></div>
+        <div>
+          <h3>Walk in with a computed corridor</h3>
+          <p class="sd">The output is a printable negotiation brief: an <b>opening position</b>,
+             a <b>target settle</b>, and a <b>red line</b> derived from a global value guardrail —
+             the price below which the cascade does more damage worldwide than the deal is
+             worth locally. The walk-away point becomes a computed number, not an opinion.</p>
+        </div>
+        <div class="svis">
+          <p class="vt">Negotiation corridor</p>
+          <div class="v-corr">
+            <div class="tr"></div>
+            <div class="mk red" style="left:18%"><div class="l">red line</div><div class="v">$8,200</div><div class="ln"></div></div>
+            <div class="mk" style="left:52%"><div class="l">target</div><div class="v">$8,550</div><div class="ln"></div></div>
+            <div class="mk" style="left:86%"><div class="l">open</div><div class="v">$9,350</div><div class="ln"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CLOSE ============================ -->
+<section class="close-strip">
+  <div class="wrap rev">
+    <p class="eyebrow" style="justify-content:center">AccessTwin</p>
+    <h2>See the cascade<br><em>before</em> you sign.</h2>
+    <p class="lede" style="text-align:center">One connected model of the world's pricing rules.
+      One adversarial rehearsal. One defensible number to walk into the room with.</p>
+    <div class="hero-cta">
+      <a class="btn" href="#net" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Watch the cascade again <span class="arr">↺</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>AccessTwin · proof of concept · public pricing mechanisms · fictional assets · no confidential data</span>
+    <span>fixed-point IRP solver · multi-agent war room · computed red lines</span>
+  </div>
+</footer>
+
+<script>
+/* ===================== hero cascade animation ===================== */
+(() => {
+  const svg = document.getElementById('net');
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // constellation: anchor + markets, prices at target vs after cascade, wave = when hit
+  const NODES = [
+    {id:'DE', x:258, y:118, p0:10000, p1:7900,  wave:0, st:'anchor'},
+    {id:'GB', x:148, y: 64, p0:10000, p1:9130,  wave:1, st:'watch'},
+    {id:'FR', x:158, y:160, p0:10000, p1:8410,  wave:1, st:'risk'},
+    {id:'NL', x:236, y: 48, p0:10000, p1:8950,  wave:1, st:'watch'},
+    {id:'CH', x:330, y: 70, p0:10000, p1:9240,  wave:1, st:'watch'},
+    {id:'ES', x: 92, y:236, p0:10000, p1:8480,  wave:2, st:'risk'},
+    {id:'IT', x:206, y:248, p0:10000, p1:8620,  wave:2, st:'risk'},
+    {id:'CA', x: 58, y:120, p0:10000, p1:9100,  wave:2, st:'watch'},
+    {id:'JP', x:452, y:108, p0:10000, p1:9560,  wave:2, st:'safe'},
+    {id:'BR', x:118, y:306, p0:10000, p1:8740,  wave:3, st:'risk'},
+    {id:'KR', x:472, y:208, p0:10000, p1:9320,  wave:3, st:'watch'},
+    {id:'AU', x:492, y:296, p0:10000, p1:9480,  wave:3, st:'safe'},
+  ];
+  const EDGES = [
+    ['DE','GB',1],['DE','FR',1],['DE','NL',1],['DE','CH',1],
+    ['FR','ES',2],['FR','IT',2],['GB','CA',2],['DE','JP',2],['GB','JP',2],
+    ['ES','BR',3],['IT','BR',3],['JP','KR',3],['DE','AU',3],['FR','CA',2],
+  ];
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+
+  // build edges (curved)
+  const edgeEls = EDGES.map(([a,b,w]) => {
+    const A = byId[a], B = byId[b];
+    const mx = (A.x+B.x)/2, my = (A.y+B.y)/2;
+    const dx = B.x-A.x, dy = B.y-A.y, d = Math.hypot(dx,dy);
+    const cx = mx - dy/d*22, cy = my + dx/d*22;
+    const p = document.createElementNS(NS,'path');
+    p.setAttribute('d', `M${A.x},${A.y} Q${cx},${cy} ${B.x},${B.y}`);
+    p.setAttribute('class','edge');
+    svg.appendChild(p);
+    const len = p.getTotalLength();
+    p.style.setProperty('--len', len);
+    p.setAttribute('stroke-dasharray', len);
+    p.setAttribute('stroke-dashoffset', len);
+    return {el:p, wave:w};
+  });
+
+  // build nodes
+  const nodeEls = NODES.map(n => {
+    const g = document.createElementNS(NS,'g');
+    g.setAttribute('class','nd');
+    g.setAttribute('transform',`translate(${n.x},${n.y})`);
+    const ring = document.createElementNS(NS,'circle');
+    ring.setAttribute('class','ring'); ring.setAttribute('r',9);
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('r', n.st==='anchor'?13:10.5);
+    const code = document.createElementNS(NS,'text');
+    code.setAttribute('class','code'); code.setAttribute('text-anchor','middle');
+    code.setAttribute('y','3.5'); code.textContent = n.id;
+    const price = document.createElementNS(NS,'text');
+    price.setAttribute('class','price'); price.setAttribute('text-anchor','middle');
+    price.setAttribute('y', n.st==='anchor'?29:26);
+    price.textContent = '$' + n.p0.toLocaleString();
+    g.append(ring,c,code,price);
+    svg.appendChild(g);
+    return {g, ring, price, n};
+  });
+  // anchor styled from the start
+  nodeEls[0].g.classList.add('s-anchor');
+
+  const anchorRead = document.getElementById('anchorRead');
+  const npvRead = document.getElementById('npvRead');
+  const NPV_FINAL = 181;
+
+  function setPrice(el, v){ el.price.textContent = '$' + Math.round(v).toLocaleString(); }
+  function tick(el, from, to, ms){
+    if (reduced){ setPrice(el, to); return; }
+    const t0 = performance.now();
+    (function f(t){
+      const k = Math.min(1,(t-t0)/ms), e = 1-Math.pow(1-k,3);
+      setPrice(el, from + (to-from)*e);
+      if (k<1) requestAnimationFrame(f);
+    })(t0);
+  }
+  function tickNum(el, prefix, from, to, suffix, ms){
+    if (reduced){ el.textContent = prefix + Math.round(to) + suffix; return; }
+    const t0 = performance.now();
+    (function f(t){
+      const k = Math.min(1,(t-t0)/ms), e = 1-Math.pow(1-k,3);
+      el.textContent = prefix + Math.round(from + (to-from)*e) + suffix;
+      if (k<1) requestAnimationFrame(f);
+    })(t0);
+  }
+
+  function reset(){
+    edgeEls.forEach(e => { e.el.classList.remove('fire'); e.el.setAttribute('stroke-dashoffset', e.el.style.getPropertyValue('--len')); });
+    nodeEls.forEach(ne => {
+      ne.g.classList.remove('s-watch','s-risk');
+      ne.ring.classList.remove('fire');
+      setPrice(ne, ne.n.p0);
+    });
+    anchorRead.textContent = '$10,000 → $10,000';
+    npvRead.textContent = '−$0M';
+  }
+
+  function play(){
+    reset();
+    // wave 0: anchor concedes
+    setTimeout(() => {
+      const a = nodeEls[0];
+      a.ring.classList.add('fire');
+      tick(a, a.n.p0, a.n.p1, 900);
+      tickNum(anchorRead, '$10,000 → $', 10000, 7900, '', 900);
+      // fix prefix formatting after tick
+      setTimeout(()=> anchorRead.textContent = '$10,000 → $7,900', 950);
+    }, 600);
+    // waves 1..3
+    [1,2,3].forEach(w => {
+      setTimeout(() => {
+        edgeEls.filter(e=>e.wave===w).forEach(e => e.el.classList.add('fire'));
+        setTimeout(() => {
+          nodeEls.filter(ne=>ne.n.wave===w).forEach(ne => {
+            ne.ring.classList.add('fire');
+            if (ne.n.st!=='safe') ne.g.classList.add('s-'+ne.n.st);
+            tick(ne, ne.n.p0, ne.n.p1, 800);
+          });
+          tickNum(npvRead, '−$', (w-1)/3*NPV_FINAL, w/3*NPV_FINAL, 'M', 800);
+        }, 650);
+      }, 600 + 1300*w);
+    });
+  }
+
+  if (reduced){
+    // static final state
+    nodeEls.forEach(ne => { setPrice(ne, ne.n.p1); if (ne.n.st!=='anchor' && ne.n.st!=='safe') ne.g.classList.add('s-'+ne.n.st); });
+    edgeEls.forEach(e => { e.el.style.strokeOpacity = .4; e.el.setAttribute('stroke-dashoffset', 0); });
+    anchorRead.textContent = '$10,000 → $7,900';
+    npvRead.textContent = '−$181M';
+  } else {
+    play();
+    setInterval(play, 8200);
+  }
+})();
+
+/* ===================== scroll reveals ===================== */
+(() => {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); }
+  }), {threshold:.18});
+  document.querySelectorAll('.rev,.impact,.sstep').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>
