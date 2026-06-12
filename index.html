@@ -91,21 +91,28 @@ h2 em{font-style:normal; color:var(--crimson)}
 .cp-foot .val{font-family:var(--mono); font-size:21px; font-weight:600; color:var(--risk)}
 .cp-foot .sub{font-family:var(--mono); font-size:11px; color:var(--muted)}
 
+/* world map layers */
+.cp-svg .ocean{fill:#FBF9F4}
+.cp-svg .land{fill:#E9E5DB; stroke:#FCFBF8; stroke-width:.55; transition:fill .6s}
+.cp-svg .land.in-scope{fill:#DBD6C8}
+.cp-svg .graticule{fill:none; stroke:#E2DED3; stroke-width:.35; stroke-opacity:.55}
+.lead{fill:none; stroke:var(--line-strong); stroke-width:.7; stroke-opacity:.85}
+
 /* svg node + edge styles */
-.nd circle{fill:#fff; stroke:var(--line-strong); stroke-width:1.4; transition:stroke .5s, fill .5s}
-.nd text{font-family:var(--mono)}
-.nd .code{font-size:10px; font-weight:600; fill:var(--ink)}
-.nd .price{font-size:9.5px; fill:var(--muted)}
-.nd.s-anchor circle{fill:var(--crimson); stroke:var(--crimson)}
-.nd.s-anchor .code{fill:#fff}
-.nd.s-watch circle{stroke:var(--warn)} .nd.s-watch .price{fill:var(--warn); font-weight:600}
-.nd.s-risk circle{stroke:var(--risk)}  .nd.s-risk .price{fill:var(--risk); font-weight:600}
+.nd circle.dot{fill:#fff; stroke:var(--line-strong); stroke-width:1.3; transition:stroke .5s, fill .5s}
+.nd text{font-family:var(--mono); paint-order:stroke; stroke:#FCFBF8; stroke-width:2.6px; stroke-linejoin:round}
+.nd .code{font-size:9px; font-weight:600; fill:var(--ink)}
+.nd.s-anchor circle.dot{fill:var(--crimson); stroke:var(--crimson)}
+.nd.s-anchor .code{fill:#fff; stroke:var(--crimson); stroke-width:2.2px}
+.nd.s-watch circle.dot{fill:var(--warn); stroke:var(--warn)} .nd.s-watch .code{fill:var(--warn)}
+.nd.s-risk  circle.dot{fill:var(--risk); stroke:var(--risk)}  .nd.s-risk  .code{fill:var(--risk)}
+.nd.s-safe  circle.dot{stroke:var(--safe)}
 .edge{fill:none; stroke:var(--crimson); stroke-width:1.3; stroke-opacity:0; }
-.edge.fire{stroke-opacity:.55; animation:draw 1s ease-out forwards}
+.edge.fire{stroke-opacity:.5; animation:draw 1s ease-out forwards}
 @keyframes draw{from{stroke-dashoffset:var(--len)} to{stroke-dashoffset:0}}
 .ring{fill:none; stroke:var(--crimson); stroke-width:1.5; opacity:0}
 .ring.fire{animation:ring 1.1s ease-out forwards}
-@keyframes ring{0%{opacity:.7; r:9} 100%{opacity:0; r:26}}
+@keyframes ring{0%{opacity:.7; r:6} 100%{opacity:0; r:22}}
 
 /* ============================ sections ============================ */
 section{padding:96px 0; position:relative}
@@ -274,7 +281,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
         <span class="t">Reference-pricing network · simulated</span>
         <span class="cp-live"><span class="dot"></span>CASCADE</span>
       </div>
-      <svg class="cp-svg" id="net" viewBox="0 0 560 330" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg class="cp-svg" id="net" viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="cp-foot">
         <div>
           <p class="lab">Anchor concession</p>
@@ -525,89 +532,104 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
-/* ===================== hero cascade animation ===================== */
+/* ===================== hero cascade — real world map ===================== */
 (() => {
-  const svg = document.getElementById('net');
-  const NS = 'http://www.w3.org/2000/svg';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const svg = d3.select('#net');
+  const W = 560, H = 300;
 
-  // constellation: anchor + markets, prices at target vs after cascade, wave = when hit
+  // markets: real [lng,lat], numeric ISO id (matches world-atlas), cascade wave + status.
+  // lx/ly = label offset so the dense European cluster stays legible.
   const NODES = [
-    {id:'DE', x:258, y:118, p0:10000, p1:7900,  wave:0, st:'anchor'},
-    {id:'GB', x:148, y: 64, p0:10000, p1:9130,  wave:1, st:'watch'},
-    {id:'FR', x:158, y:160, p0:10000, p1:8410,  wave:1, st:'risk'},
-    {id:'NL', x:236, y: 48, p0:10000, p1:8950,  wave:1, st:'watch'},
-    {id:'CH', x:330, y: 70, p0:10000, p1:9240,  wave:1, st:'watch'},
-    {id:'ES', x: 92, y:236, p0:10000, p1:8480,  wave:2, st:'risk'},
-    {id:'IT', x:206, y:248, p0:10000, p1:8620,  wave:2, st:'risk'},
-    {id:'CA', x: 58, y:120, p0:10000, p1:9100,  wave:2, st:'watch'},
-    {id:'JP', x:452, y:108, p0:10000, p1:9560,  wave:2, st:'safe'},
-    {id:'BR', x:118, y:306, p0:10000, p1:8740,  wave:3, st:'risk'},
-    {id:'KR', x:472, y:208, p0:10000, p1:9320,  wave:3, st:'watch'},
-    {id:'AU', x:492, y:296, p0:10000, p1:9480,  wave:3, st:'safe'},
-  ];
-  const EDGES = [
-    ['DE','GB',1],['DE','FR',1],['DE','NL',1],['DE','CH',1],
-    ['FR','ES',2],['FR','IT',2],['GB','CA',2],['DE','JP',2],['GB','JP',2],
-    ['ES','BR',3],['IT','BR',3],['JP','KR',3],['DE','AU',3],['FR','CA',2],
+    {id:'DE', ll:[ 10.45, 51.16], iso:276, wave:0, st:'anchor', lx:0,   ly:-13},
+    {id:'GB', ll:[ -2.50, 54.00], iso:826, wave:1, st:'watch',  lx:-21, ly:-7},
+    {id:'NL', ll:[  5.30, 52.20], iso:528, wave:1, st:'watch',  lx:-2,  ly:-19},
+    {id:'FR', ll:[  2.40, 46.60], iso:250, wave:1, st:'risk',   lx:-25, ly:5},
+    {id:'CH', ll:[  8.20, 46.90], iso:756, wave:1, st:'watch',  lx:14,  ly:15},
+    {id:'ES', ll:[ -3.70, 40.30], iso:724, wave:2, st:'risk',   lx:-21, ly:17},
+    {id:'IT', ll:[ 12.50, 42.80], iso:380, wave:2, st:'risk',   lx:17,  ly:21},
+    {id:'CA', ll:[-106.30,56.10], iso:124, wave:2, st:'watch',  lx:0,   ly:-13},
+    {id:'JP', ll:[138.30, 36.20], iso:392, wave:2, st:'safe',   lx:14,  ly:-10},
+    {id:'KR', ll:[127.90, 36.50], iso:410, wave:3, st:'watch',  lx:-15, ly:13},
+    {id:'BR', ll:[-52.90,-10.80], iso:76,  wave:3, st:'risk',   lx:0,   ly:-13},
+    {id:'AU', ll:[133.80,-25.30], iso:36,  wave:3, st:'safe',   lx:0,   ly:-13},
   ];
   const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
-
-  // build edges (curved)
-  const edgeEls = EDGES.map(([a,b,w]) => {
-    const A = byId[a], B = byId[b];
-    const mx = (A.x+B.x)/2, my = (A.y+B.y)/2;
-    const dx = B.x-A.x, dy = B.y-A.y, d = Math.hypot(dx,dy);
-    const cx = mx - dy/d*22, cy = my + dx/d*22;
-    const p = document.createElementNS(NS,'path');
-    p.setAttribute('d', `M${A.x},${A.y} Q${cx},${cy} ${B.x},${B.y}`);
-    p.setAttribute('class','edge');
-    svg.appendChild(p);
-    const len = p.getTotalLength();
-    p.style.setProperty('--len', len);
-    p.setAttribute('stroke-dasharray', len);
-    p.setAttribute('stroke-dashoffset', len);
-    return {el:p, wave:w};
-  });
-
-  // build nodes
-  const nodeEls = NODES.map(n => {
-    const g = document.createElementNS(NS,'g');
-    g.setAttribute('class','nd');
-    g.setAttribute('transform',`translate(${n.x},${n.y})`);
-    const ring = document.createElementNS(NS,'circle');
-    ring.setAttribute('class','ring'); ring.setAttribute('r',9);
-    const c = document.createElementNS(NS,'circle');
-    c.setAttribute('r', n.st==='anchor'?13:10.5);
-    const code = document.createElementNS(NS,'text');
-    code.setAttribute('class','code'); code.setAttribute('text-anchor','middle');
-    code.setAttribute('y','3.5'); code.textContent = n.id;
-    const price = document.createElementNS(NS,'text');
-    price.setAttribute('class','price'); price.setAttribute('text-anchor','middle');
-    price.setAttribute('y', n.st==='anchor'?29:26);
-    price.textContent = '$' + n.p0.toLocaleString();
-    g.append(ring,c,code,price);
-    svg.appendChild(g);
-    return {g, ring, price, n};
-  });
-  // anchor styled from the start
-  nodeEls[0].g.classList.add('s-anchor');
+  const EDGES = [
+    ['DE','GB',1],['DE','FR',1],['DE','NL',1],['DE','CH',1],
+    ['FR','ES',2],['FR','IT',2],['GB','CA',2],['DE','JP',2],['FR','CA',2],
+    ['ES','BR',3],['IT','BR',3],['JP','KR',3],['DE','AU',3],
+  ];
+  const isoScope = new Set(NODES.map(n => n.iso));
 
   const anchorRead = document.getElementById('anchorRead');
   const npvRead = document.getElementById('npvRead');
   const NPV_FINAL = 181;
 
-  function setPrice(el, v){ el.price.textContent = '$' + Math.round(v).toLocaleString(); }
-  function tick(el, from, to, ms){
-    if (reduced){ setPrice(el, to); return; }
-    const t0 = performance.now();
-    (function f(t){
-      const k = Math.min(1,(t-t0)/ms), e = 1-Math.pow(1-k,3);
-      setPrice(el, from + (to-from)*e);
-      if (k<1) requestAnimationFrame(f);
-    })(t0);
+  let proj, edgeEls = [], nodeEls = [];
+
+  async function build(){
+    let feats = [];
+    try {
+      const topo = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => r.json());
+      feats = topojson.feature(topo, topo.objects.countries).features;
+    } catch (e) { /* map tiles unavailable — nodes/arcs still render */ }
+
+    // Natural Earth, rotated to centre on the Atlantic; extend the fit south to crop Antarctica.
+    proj = d3.geoNaturalEarth1().rotate([-10, 0])
+      .fitExtent([[8, 4], [W - 8, H + 54]], { type: 'Sphere' })
+      .clipExtent([[0, 0], [W, H]]);
+    const path = d3.geoPath(proj);
+
+    svg.append('rect').attr('class','ocean').attr('width', W).attr('height', H);
+    svg.append('path').datum(d3.geoGraticule10()).attr('class','graticule').attr('d', path);
+    svg.append('g').selectAll('path.land').data(feats).join('path')
+      .attr('class', d => 'land' + (isoScope.has(+d.id) ? ' in-scope' : ''))
+      .attr('d', path);
+
+    const pt = id => proj(byId[id].ll);
+
+    // reference-basket edges as arcs that "draw" outward from the anchor
+    const edgeG = svg.append('g');
+    edgeEls = EDGES.map(([a, b, w]) => {
+      const p1 = pt(a), p2 = pt(b);
+      const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+      const dr = Math.hypot(dx, dy) * 1.7 || 1;
+      const p = edgeG.append('path')
+        .attr('class','edge')
+        .attr('d', `M${p1[0]},${p1[1]} A${dr},${dr} 0 0,1 ${p2[0]},${p2[1]}`)
+        .node();
+      const len = p.getTotalLength();
+      p.style.setProperty('--len', len);
+      p.setAttribute('stroke-dasharray', len);
+      p.setAttribute('stroke-dashoffset', len);
+      return { el:p, wave:w };
+    });
+
+    // market nodes at true geographic positions
+    const nodeG = svg.append('g');
+    nodeEls = NODES.map(n => {
+      const [x, y] = pt(n.id);
+      const g = nodeG.append('g').attr('class','nd').attr('transform', `translate(${x},${y})`);
+      if (n.st !== 'anchor' && (Math.abs(n.lx) > 6 || Math.abs(n.ly) > 14)) {
+        g.append('line').attr('class','lead')
+          .attr('x1', 0).attr('y1', 0)
+          .attr('x2', n.lx).attr('y2', n.ly + (n.ly < 0 ? 3 : -3));
+      }
+      const ring = g.append('circle').attr('class','ring').attr('r', 6).node();
+      g.append('circle').attr('class','dot').attr('r', n.st === 'anchor' ? 9 : 3.6);
+      const code = g.append('text').attr('class','code').attr('text-anchor','middle');
+      if (n.st === 'anchor') code.attr('y', 3.2);
+      else code.attr('x', n.lx).attr('y', n.ly);
+      code.text(n.id);
+      return { g: g.node(), ring, n };
+    });
+    nodeEls[0].g.classList.add('s-anchor');
   }
+
   function tickNum(el, prefix, from, to, suffix, ms){
     if (reduced){ el.textContent = prefix + Math.round(to) + suffix; return; }
     const t0 = performance.now();
@@ -620,11 +642,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
 
   function reset(){
     edgeEls.forEach(e => { e.el.classList.remove('fire'); e.el.setAttribute('stroke-dashoffset', e.el.style.getPropertyValue('--len')); });
-    nodeEls.forEach(ne => {
-      ne.g.classList.remove('s-watch','s-risk');
-      ne.ring.classList.remove('fire');
-      setPrice(ne, ne.n.p0);
-    });
+    nodeEls.forEach(ne => { ne.g.classList.remove('s-watch','s-risk','s-safe'); ne.ring.classList.remove('fire'); });
     anchorRead.textContent = '$10,000 → $10,000';
     npvRead.textContent = '−$0M';
   }
@@ -633,22 +651,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
     reset();
     // wave 0: anchor concedes
     setTimeout(() => {
-      const a = nodeEls[0];
-      a.ring.classList.add('fire');
-      tick(a, a.n.p0, a.n.p1, 900);
-      tickNum(anchorRead, '$10,000 → $', 10000, 7900, '', 900);
-      // fix prefix formatting after tick
-      setTimeout(()=> anchorRead.textContent = '$10,000 → $7,900', 950);
+      nodeEls[0].ring.classList.add('fire');
+      anchorRead.textContent = '$10,000 → $7,900';
     }, 600);
-    // waves 1..3
+    // waves 1..3 ripple outward
     [1,2,3].forEach(w => {
       setTimeout(() => {
-        edgeEls.filter(e=>e.wave===w).forEach(e => e.el.classList.add('fire'));
+        edgeEls.filter(e => e.wave === w).forEach(e => e.el.classList.add('fire'));
         setTimeout(() => {
-          nodeEls.filter(ne=>ne.n.wave===w).forEach(ne => {
+          nodeEls.filter(ne => ne.n.wave === w).forEach(ne => {
             ne.ring.classList.add('fire');
-            if (ne.n.st!=='safe') ne.g.classList.add('s-'+ne.n.st);
-            tick(ne, ne.n.p0, ne.n.p1, 800);
+            ne.g.classList.add('s-' + ne.n.st);
           });
           tickNum(npvRead, '−$', (w-1)/3*NPV_FINAL, w/3*NPV_FINAL, 'M', 800);
         }, 650);
@@ -656,16 +669,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
     });
   }
 
-  if (reduced){
-    // static final state
-    nodeEls.forEach(ne => { setPrice(ne, ne.n.p1); if (ne.n.st!=='anchor' && ne.n.st!=='safe') ne.g.classList.add('s-'+ne.n.st); });
+  function staticFinal(){
     edgeEls.forEach(e => { e.el.style.strokeOpacity = .4; e.el.setAttribute('stroke-dashoffset', 0); });
+    nodeEls.forEach(ne => ne.g.classList.add('s-' + ne.n.st));
     anchorRead.textContent = '$10,000 → $7,900';
     npvRead.textContent = '−$181M';
-  } else {
-    play();
-    setInterval(play, 8200);
   }
+
+  build().then(() => {
+    if (reduced) staticFinal();
+    else { play(); setInterval(play, 8200); }
+  });
 })();
 
 /* ===================== scroll reveals ===================== */
