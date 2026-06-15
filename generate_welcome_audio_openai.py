@@ -28,15 +28,14 @@ load_dotenv()
 
 
 SCRIPT = (
-    "Dear visitor, please allow us six minutes to walk you through the system end to end. "
+    "Dear viewers, please allow us six minutes to walk you through the system end to end. "
     "We will follow the hidden global pricing network, the product evidence, the Global Value Frontier, "
     "the payer War Room, and the final negotiation brief. "
-    "Germany and TAK-279 are used as an illustrative example, but AccessTwin is not confined to one country "
+    "Germany and TAK-279 are used as an illustrative example, but AccessTwin is not confined to one country, products, indications or launch decisions. "
     "Please note all numbers and facts mentioned are for the sake of ideation and do not represent real-life facts. "
-    "The same framework is designed to work across markets, products, indications, and launch decisions. "
-    "From the next page, you can pause, resume, or replay me at any time using the player at the bottom of the screen. "
+    "From the next page, you can pause, resume, or replay at any time using the player at the bottom of the screen. "
     "From here on Sara will take over the walk through. She will guide you through the system and explain the key capabilities. "
-    "Choose Guided to begin the Sara narration immediately, or choose Manual to explore freely and start the walkthrough "
+    "Choose Guided to begin Sara's narration immediately, or choose Manual to explore freely and start the walkthrough "
     "for any section when you are ready."
 )
 
