@@ -211,7 +211,7 @@ body.paused .stage-mode-hint{color:var(--amber)}
 
 /* ============================== V8 GUIDED START GATE ============================== */
 body.intro-open{overflow:hidden}
-.welcome-gate{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:24px;background:
+.welcome-gate{position:fixed;inset:0;z-index:320;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:24px;background:
   radial-gradient(55% 58% at 18% 12%,rgba(36,84,230,.16),transparent 72%),
   radial-gradient(46% 52% at 88% 82%,rgba(7,143,136,.13),transparent 72%),
   rgba(247,250,253,.88);backdrop-filter:blur(22px);opacity:1;visibility:visible;transition:opacity .55s ease,visibility .55s ease}
@@ -222,7 +222,7 @@ body.intro-open{overflow:hidden}
 .gate-orbit i{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 8px var(--blue-wash),0 0 26px rgba(36,84,230,.34)}
 .gate-orbit i:nth-child(1){left:9%;top:49%}.gate-orbit i:nth-child(2){right:16%;top:20%;background:var(--teal);box-shadow:0 0 0 8px var(--teal-wash)}.gate-orbit i:nth-child(3){right:8%;bottom:30%;background:var(--red);box-shadow:0 0 0 8px var(--red-wash)}
 @keyframes gateSpin{to{transform:rotate(360deg)}}@keyframes gateSpinReverse{to{transform:rotate(-360deg)}}
-.welcome-card{position:relative;width:min(760px,94vw);padding:38px 40px 34px;border:1px solid rgba(205,217,230,.96);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,250,254,.94));box-shadow:0 62px 140px -70px rgba(16,36,58,.62),0 20px 54px -34px rgba(16,36,58,.30),inset 0 1px 0 #fff;overflow:hidden;animation:gateEnter .72s cubic-bezier(.2,.78,.2,1) both}
+.welcome-card{position:relative;width:min(760px,94vw);margin:auto;padding:38px 40px 34px;border:1px solid rgba(205,217,230,.96);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,250,254,.94));box-shadow:0 62px 140px -70px rgba(16,36,58,.62),0 20px 54px -34px rgba(16,36,58,.30),inset 0 1px 0 #fff;overflow:hidden;animation:gateEnter .72s cubic-bezier(.2,.78,.2,1) both}
 .welcome-card::before{content:"";position:absolute;inset:0;background:radial-gradient(48% 72% at 0 0,rgba(36,84,230,.10),transparent 75%),radial-gradient(46% 62% at 100% 100%,rgba(7,143,136,.08),transparent 76%);pointer-events:none}
 @keyframes gateEnter{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
 .gate-content{position:relative;z-index:2;text-align:center}
@@ -362,7 +362,18 @@ img,svg,canvas,video{max-width:100%}
   .panel-title p{font-size:11px}
 }
 
-/* Tablets and compact laptops */
+/* Very short desktop windows (e.g. a small / split window): drop the large
+   min-height so the stage foot (section tabs) stays above the floating player
+   and every section remains reachable. The panel scrolls internally. */
+@media(max-height:660px) and (min-width:761px){
+  .experience{padding-bottom:104px}
+  .stage-shell{
+    top:70px;
+    height:calc(100dvh - 162px);
+    min-height:0;
+    max-height:none;
+  }
+}
 @media(max-width:1100px){
   .experience{
     width:100%;
@@ -624,6 +635,40 @@ img,svg,canvas,video{max-width:100%}
   .gate-journey{margin-top:10px}
   .gate-actions{margin-top:12px}
   .stage-shell{min-height:460px}
+}
+
+/* Short laptop / desktop heights (the default welcome card is ~820px tall):
+   compact the welcome card so the guided + manual buttons stay on screen
+   without scrolling. The gate itself also scrolls as a fallback, so the
+   controls are always reachable on any viewport height. */
+@media(max-height:880px) and (min-width:761px){
+  .welcome-card{padding:26px 36px 22px}
+  .gate-avatar{width:190px;height:74px;margin-bottom:4px}
+  .gate-avatar::before{width:90px;height:90px}
+  .gate-avatar::after{width:114px;height:114px}
+  .gate-mark{width:58px;height:58px;border-radius:18px}
+  .gate-kicker{padding:6px 10px}
+  .welcome-card h1{margin-top:12px;font-size:clamp(27px,3.4vw,42px)}
+  .gate-copy{margin-top:12px;font-size:13.5px;line-height:1.55}
+  .gate-journey{margin-top:14px}
+  .gate-actions{margin-top:16px}
+  .gate-btn{min-height:52px}
+  .gate-foot{margin-top:10px}
+}
+@media(max-height:700px) and (min-width:761px){
+  .welcome-card{padding:18px 30px 15px}
+  .gate-avatar{width:158px;height:56px;margin-bottom:2px}
+  .gate-avatar::before{width:70px;height:70px}
+  .gate-avatar::after{width:90px;height:90px}
+  .gate-mark{width:48px;height:48px;border-radius:15px}
+  .gate-mark::before{width:22px;height:22px}
+  .gate-kicker{padding:5px 9px;font-size:7.5px}
+  .welcome-card h1{margin-top:8px;font-size:clamp(22px,2.8vw,33px);line-height:1.05}
+  .gate-copy{margin-top:8px;font-size:12px;line-height:1.46}
+  .gate-journey{margin-top:10px}
+  .gate-actions{margin-top:12px}
+  .gate-btn{min-height:48px;font-size:11px}
+  .gate-foot{margin-top:8px}
 }
 
 
