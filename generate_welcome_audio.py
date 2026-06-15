@@ -24,7 +24,7 @@ VOICE = "sage"
 OUT = Path(__file__).resolve().parent / "audio" / "welcome_intro.mp3"
 
 TEXT = (
-    "Dear visitor, please allow me about five minutes to walk you through the whole "
+    "Dear visitor, please allow us about six minutes to walk you through the whole "
     "system end to end. You will see the hidden pricing network, the asset evidence, "
     "the Global Value Frontier, the payer War Room and the final negotiation brief. "
     "You can pause, resume, or play me anytime from the bottom left panel. Guided "

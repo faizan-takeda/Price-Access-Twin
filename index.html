@@ -648,15 +648,15 @@ img,svg,canvas,video{max-width:100%}
         <div class="voice-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
         <div class="gate-mark"></div>
       </div>
-      <div class="gate-kicker"><i></i> AccessTwin guided experience</div>
-      <h1 id="welcomeTitle">Dear visitor, please allow me <em>about five minutes</em> to walk you through the whole system end to end.</h1>
-      <p class="gate-copy" id="welcomeCopy">You will see the hidden pricing network, the asset evidence, the Global Value Frontier, the payer War Room and the final negotiation brief. <strong>You can pause at any time, operate every control yourself and resume from the same point.</strong></p>
-      <div class="gate-journey" aria-label="Walkthrough journey"><span><b>01</b> Network</span><span><b>02</b> Evidence</span><span><b>03</b> Value</span><span><b>04</b> War Room</span><span><b>05</b> Brief</span></div>
+      <div class="gate-kicker"><i></i> Six-minute guided experience · AI-generated narration</div>
+      <h1 id="welcomeTitle">Dear visitor, allow us <em>six minutes</em> to walk you through the system end to end.</h1>
+      <p class="gate-copy" id="welcomeCopy">We will follow the hidden global pricing network, product evidence, the Global Value Frontier, the payer War Room and the final negotiation brief. <strong>Germany and TAK-279 are illustrative examples only; the same framework is designed to work across markets, products, indications and launch decisions.</strong> Please note all numbers and facts mentioned are for the sake of ideation and do not represent real-life facts. From the next page, use the player at the bottom of the screen to pause, resume or replay at any time.</p>
+      <div class="gate-journey" aria-label="Walkthrough agenda"><span><b>01</b> Network</span><span><b>02</b> Evidence</span><span><b>03</b> Value Frontier</span><span><b>04</b> War Room</span><span><b>05</b> Brief</span><span><b>06</b> Impact</span></div>
       <div class="gate-actions">
-        <button class="gate-btn primary" id="startGuidedBtn" type="button"><span class="gate-play" aria-hidden="true"></span><span>Yes, let’s go</span></button>
-        <button class="gate-btn secondary" id="startManualBtn" type="button"><span class="gate-manual" aria-hidden="true">✦</span><span>No, I’ll explore manually</span></button>
+        <button class="gate-btn primary" id="startGuidedBtn" type="button"><span class="gate-play" aria-hidden="true"></span><span>Yes — start guided walkthrough</span></button>
+        <button class="gate-btn secondary" id="startManualBtn" type="button"><span class="gate-manual" aria-hidden="true">✦</span><span>No — explore manually</span></button>
       </div>
-      <div class="gate-foot"><strong>Guided option starts narration immediately.</strong> In manual mode, every section retains its own “Start walkthrough” control.</div>
+      <div class="gate-foot"><strong>Guided starts the section narration immediately.</strong> Manual unlocks the system, while every section keeps its own “Start walkthrough” control.</div>
     </div>
   </div>
 </div>
@@ -899,7 +899,7 @@ img,svg,canvas,video{max-width:100%}
   </aside>
 </div>
 
-<audio id="welcomeAudio" preload="auto" autoplay playsinline src="audio/1_welcome_intro.mp3"></audio>
+<audio id="welcomeAudio" preload="auto" autoplay playsinline src="audio/1_welcome_intro.mp3" aria-label="AI-generated welcome narration"></audio>
 <audio id="audio0" preload="auto" playsinline src="audio/section_0.mp3"></audio>
 <audio id="audio1" preload="auto" playsinline src="audio/section_1.mp3"></audio>
 <audio id="audio2" preload="auto" playsinline src="audio/section_2.mp3"></audio>
@@ -1382,94 +1382,87 @@ function attemptAutoplay(reason='initial'){
 }
 
 
-const WELCOME_NARRATION = 'Dear visitor, please allow me about five minutes to walk you through the whole system end to end. You will see the hidden pricing network, the asset evidence, the Global Value Frontier, the payer War Room and the final negotiation brief. You can pause, resume, or play me anytime from the bottom left panel. Guided option starts narration immediately. In manual mode, every section retains its own Start walkthrough control.';
+const WELCOME_NARRATION = 'Dear visitor, please allow me six minutes to walk you through the system end to end. We will follow the hidden global pricing network, the product evidence, the Global Value Frontier, the payer War Room, and the final negotiation brief. Germany and TAK-279 are used as an illustrative example, but AccessTwin is not confined to one country or one product; the same framework is designed to work across markets, products, indications, and launch decisions. From the next page, you can pause, resume, or replay me at any time using the player at the bottom of the screen. Choose Guided to begin the narration immediately, or choose Manual to explore freely and start the walkthrough for any section when you are ready.';
 const welcomeAudio=$('#welcomeAudio');
-let welcomeSpeech=null;
 let welcomeNarrationStopped=false;
 let welcomeNarrationStarted=false;
+let welcomeAutoplayRetryArmed=false;
 
 function setWelcomeSpeaking(active){
   $('#welcomeGate')?.classList.toggle('intro-speaking',!!active);
 }
 
-function pickWelcomeVoice(){
-  if(!('speechSynthesis' in window))return null;
-  const voices=speechSynthesis.getVoices();
-  const preferences=['Microsoft Aria','Microsoft Jenny','Google UK English Female','Google US English','Samantha','Serena','Daniel','Karen'];
-  for(const preferred of preferences){
-    const found=voices.find(v=>v.name.includes(preferred)&&/^en/i.test(v.lang||''));
-    if(found)return found;
+function playOpenAIWelcomeAudio(){
+  if(welcomeNarrationStopped||!welcomeAudio)return Promise.resolve(false);
+  welcomeAudio.preload='auto';
+  welcomeAudio.autoplay=true;
+  welcomeAudio.muted=false;
+  welcomeAudio.defaultMuted=false;
+  welcomeAudio.volume=1;
+  const attempt=welcomeAudio.play();
+  if(attempt&&typeof attempt.then==='function'){
+    return attempt.then(()=>{
+      if(welcomeNarrationStopped){welcomeAudio.pause();return false}
+      welcomeNarrationStarted=true;
+      setWelcomeSpeaking(true);
+      return true;
+    });
   }
-  return voices.find(v=>/^en-GB/i.test(v.lang||''))||voices.find(v=>/^en-US/i.test(v.lang||''))||voices.find(v=>/^en/i.test(v.lang||''))||null;
+  welcomeNarrationStarted=true;
+  setWelcomeSpeaking(true);
+  return Promise.resolve(true);
 }
 
-function startWelcomeSpeechFallback(){
-  if(welcomeNarrationStopped||welcomeNarrationStarted||!('speechSynthesis' in window))return;
-  try{
-    speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(WELCOME_NARRATION);
-    const voice=pickWelcomeVoice();
-    if(voice)utterance.voice=voice;
-    utterance.lang=voice?.lang||'en-US';
-    utterance.rate=.94;
-    utterance.pitch=1;
-    utterance.volume=1;
-    utterance.onstart=()=>{welcomeNarrationStarted=true;setWelcomeSpeaking(true)};
-    utterance.onend=()=>setWelcomeSpeaking(false);
-    utterance.onerror=()=>setWelcomeSpeaking(false);
-    welcomeSpeech=utterance;
-    speechSynthesis.speak(utterance);
-  }catch(error){
-    setWelcomeSpeaking(false);
-  }
+function armWelcomeAudioRetry(){
+  if(welcomeAutoplayRetryArmed||welcomeNarrationStopped)return;
+  welcomeAutoplayRetryArmed=true;
+  const retry=()=>{
+    welcomeAutoplayRetryArmed=false;
+    if(welcomeNarrationStopped)return;
+    playOpenAIWelcomeAudio().catch(()=>setWelcomeSpeaking(false));
+  };
+  // Browser policies can block audible autoplay. Any ordinary interaction with the
+  // welcome screen retries the same OpenAI-generated MP3; no browser TTS is used.
+  document.addEventListener('pointerdown',retry,{once:true,capture:true});
+  document.addEventListener('keydown',retry,{once:true,capture:true});
 }
 
 function startWelcomeNarration(){
   welcomeNarrationStopped=false;
   welcomeNarrationStarted=false;
-  setWelcomeSpeaking(true);
-  if(!welcomeAudio){
-    startWelcomeSpeechFallback();
-    return;
-  }
-  welcomeAudio.preload='auto';
-  welcomeAudio.autoplay=true;
-  welcomeAudio.muted=false;
-  welcomeAudio.volume=1;
+  if(!welcomeAudio){setWelcomeSpeaking(false);return}
   try{welcomeAudio.currentTime=0}catch(error){}
-  const attempt=welcomeAudio.play();
-  if(attempt&&typeof attempt.then==='function'){
-    attempt.then(()=>{
-      if(welcomeNarrationStopped){welcomeAudio.pause();return}
-      welcomeNarrationStarted=true;
-      setWelcomeSpeaking(true);
-    }).catch(()=>startWelcomeSpeechFallback());
-  }else{
-    welcomeNarrationStarted=true;
-  }
+  setWelcomeSpeaking(true);
+  playOpenAIWelcomeAudio().catch(()=>{
+    setWelcomeSpeaking(false);
+    armWelcomeAudioRetry();
+  });
 }
 
 function stopWelcomeNarration(){
   welcomeNarrationStopped=true;
+  welcomeNarrationStarted=false;
   setWelcomeSpeaking(false);
   if(welcomeAudio){
     try{welcomeAudio.pause();welcomeAudio.currentTime=0}catch(error){}
   }
-  if('speechSynthesis' in window){
-    try{speechSynthesis.cancel()}catch(error){}
-  }
-  welcomeSpeech=null;
 }
 
 if(welcomeAudio){
-  welcomeAudio.addEventListener('playing',()=>{if(!welcomeNarrationStopped){welcomeNarrationStarted=true;setWelcomeSpeaking(true)}});
-  welcomeAudio.addEventListener('ended',()=>setWelcomeSpeaking(false));
-  welcomeAudio.addEventListener('error',()=>startWelcomeSpeechFallback(),{once:true});
-}
-if('speechSynthesis' in window){
-  speechSynthesis.addEventListener?.('voiceschanged',()=>{
-    if(!welcomeNarrationStopped&&!welcomeNarrationStarted&&$('#welcomeGate')&&!$('#welcomeGate').hidden)startWelcomeSpeechFallback();
+  welcomeAudio.addEventListener('playing',()=>{
+    if(!welcomeNarrationStopped){welcomeNarrationStarted=true;setWelcomeSpeaking(true)}
   });
+  welcomeAudio.addEventListener('pause',()=>{
+    if(!welcomeNarrationStopped&&!welcomeAudio.ended)setWelcomeSpeaking(false);
+  });
+  welcomeAudio.addEventListener('ended',()=>setWelcomeSpeaking(false));
+  welcomeAudio.addEventListener('error',()=>{
+    setWelcomeSpeaking(false);
+    console.warn('OpenAI welcome narration file failed to load:',welcomeAudio.currentSrc||welcomeAudio.src);
+  },{once:true});
+  welcomeAudio.addEventListener('canplaythrough',()=>{
+    if(!welcomeNarrationStopped&&!welcomeNarrationStarted)playOpenAIWelcomeAudio().catch(()=>armWelcomeAudioRetry());
+  },{once:true});
 }
 
 
