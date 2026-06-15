@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light" />
-<title>AccessTwin · Living Decision Room v8 · Guided Start</title>
+<title>AccessTwin · Living Decision Room</title>
 <meta name="description" content="An automatic narrated and interactive prototype for risk-adjusted global pharmaceutical pricing decisions." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -635,6 +635,126 @@ img,svg,canvas,video{max-width:100%}
   overscroll-behavior-y:auto!important;
 }
 
+
+
+/* ============================== V12 TRUE RESPONSIVE + GUIDED VISIBILITY ==============================
+   Final layout overrides. The welcome actions always remain visible, every analytical panel can
+   scroll on compact screens, and the guided walkthrough keeps the live decision canvas in view.
+======================================================================================================= */
+:root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
+
+/* Welcome screen: fixed action area + independently scrollable explanation. */
+.welcome-gate{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden!important;
+  padding:max(10px,var(--safe-top)) max(10px,var(--safe-right)) max(10px,var(--safe-bottom)) max(10px,var(--safe-left));
+}
+.welcome-card{
+  width:min(760px,100%);
+  height:min(720px,calc(100dvh - max(20px,var(--safe-top)) - max(20px,var(--safe-bottom))));
+  max-height:calc(100dvh - max(20px,var(--safe-top)) - max(20px,var(--safe-bottom)));
+  min-height:0;
+  overflow:hidden!important;
+  padding:clamp(18px,3.2vh,34px) clamp(16px,3.2vw,38px) clamp(14px,2.5vh,28px);
+}
+.gate-content{
+  height:100%;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  align-items:start;
+}
+.gate-scroll{
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:2px 5px 7px;
+  scrollbar-width:thin;
+  scrollbar-color:#cfd9e5 transparent;
+}
+.gate-scroll::-webkit-scrollbar{width:5px}
+.gate-scroll::-webkit-scrollbar-thumb{background:#cfd9e5;border-radius:99px}
+.gate-actions{
+  position:relative;
+  z-index:4;
+  margin-top:10px!important;
+  padding-top:8px;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 28%);
+}
+.gate-foot{position:relative;z-index:4;margin-top:9px!important;padding-bottom:1px}
+
+/* Guided mode on compact screens must show the live canvas, not scroll the canvas away to the story rail. */
+@media(max-width:1100px){
+  body.guided .story{opacity:.78}
+  .stage-shell{scroll-margin-top:76px}
+}
+
+@media(max-width:760px){
+  .welcome-card{
+    height:calc(100dvh - max(12px,var(--safe-top)) - max(12px,var(--safe-bottom)));
+    max-height:calc(100dvh - max(12px,var(--safe-top)) - max(12px,var(--safe-bottom)));
+    padding:14px 12px 11px;
+    border-radius:18px;
+  }
+  .gate-content{grid-template-rows:auto minmax(0,1fr) auto auto}
+  .gate-avatar{width:144px!important;height:58px!important;margin:0 auto 3px!important}
+  .gate-avatar::before{width:68px!important;height:68px!important;box-shadow:0 0 0 9px rgba(36,84,230,.04)!important}
+  .gate-avatar::after{width:86px!important;height:86px!important}
+  .gate-mark{width:48px!important;height:48px!important;border-radius:15px!important}
+  .gate-mark::before{width:21px!important;height:21px!important;border-width:2px!important}
+  .gate-scroll{padding:1px 2px 5px}
+  .gate-kicker{padding:6px 8px;font-size:6.8px}
+  .welcome-card h1{margin-top:10px!important;font-size:clamp(25px,8.3vw,35px)!important;line-height:1.02!important}
+  .gate-copy{margin-top:9px!important;font-size:10.8px!important;line-height:1.43!important}
+  .gate-journey{margin-top:10px!important;padding-bottom:2px!important}
+  .gate-journey span{padding:6px 7px!important;font-size:6.2px!important}
+  .gate-actions{grid-template-columns:1fr!important;gap:7px!important;margin-top:5px!important;padding-top:6px}
+  .gate-btn{min-height:45px!important;font-size:9.8px!important;border-radius:12px!important}
+  .gate-foot{margin-top:6px!important;font-size:7.4px!important;line-height:1.28!important}
+
+  /* Stable phone canvas. Content inside each chapter scrolls; the stage itself remains visible. */
+  .experience{padding-bottom:calc(105px + var(--safe-bottom))!important}
+  .stage-shell{
+    height:calc(100dvh - 142px)!important;
+    min-height:430px!important;
+    scroll-margin-top:62px;
+  }
+  .stage-body{height:calc(100% - 100px)!important}
+  .panel{padding-bottom:36px!important}
+  .guide-cursor{z-index:125}
+}
+
+@media(max-width:390px){
+  .gate-avatar{height:50px!important}
+  .welcome-card h1{font-size:24px!important}
+  .gate-copy{font-size:10.2px!important}
+  .gate-btn{min-height:42px!important}
+  .gate-foot{font-size:7px!important}
+}
+
+/* Short phones/tablets and landscape: preserve both choice buttons without hiding the explanation. */
+@media(max-height:620px){
+  .welcome-card{height:calc(100dvh - 10px);max-height:calc(100dvh - 10px);padding-top:9px;padding-bottom:8px}
+  .gate-avatar{height:42px!important;margin-bottom:1px!important}
+  .gate-avatar::before{width:58px!important;height:58px!important}
+  .gate-avatar::after{width:72px!important;height:72px!important}
+  .gate-mark{width:40px!important;height:40px!important}
+  .gate-mark::before{width:18px!important;height:18px!important}
+  .welcome-card h1{font-size:clamp(23px,5.4vw,31px)!important;margin-top:7px!important}
+  .gate-copy{font-size:10px!important;line-height:1.36!important;margin-top:7px!important}
+  .gate-journey{margin-top:7px!important}
+  .gate-actions{margin-top:3px!important;padding-top:4px}
+  .gate-btn{min-height:40px!important}
+  .gate-foot{margin-top:4px!important}
+}
+@media(max-height:620px) and (min-width:560px){
+  .gate-actions{grid-template-columns:1.15fr .85fr!important}
+}
+
 </style>
 </head>
 <body class="paused intro-open">
@@ -648,15 +768,17 @@ img,svg,canvas,video{max-width:100%}
         <div class="voice-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
         <div class="gate-mark"></div>
       </div>
-      <div class="gate-kicker"><i></i> Six-minute guided experience · AI-generated narration</div>
-      <h1 id="welcomeTitle">Dear viewers, please allow us <em>six minutes</em> to walk you through the system end to end.</h1>
-      <p class="gate-copy" id="welcomeCopy">We will follow the hidden global pricing network, product evidence, the Global Value Frontier, the payer War Room and the final negotiation brief. <strong>Germany and TAK-279 are illustrative examples only; the same framework is designed to work across markets, products, indications and launch decisions.</strong> Please note all numbers and facts mentioned are for the sake of ideation and do not represent real-life facts. From the next page, use the player at the bottom of the screen to pause, resume or replay at any time.</p>
-      <div class="gate-journey" aria-label="Walkthrough agenda"><span><b>01</b> Network</span><span><b>02</b> Evidence</span><span><b>03</b> Value Frontier</span><span><b>04</b> War Room</span><span><b>05</b> Brief</span><span><b>06</b> Impact</span></div>
+      <div class="gate-scroll" id="gateScroll">
+        <div class="gate-kicker"><i></i> Six-minute guided experience · AI-generated narration</div>
+        <h1 id="welcomeTitle">Dear viewers, please allow us <em>six minutes</em> to walk you through the system end to end.</h1>
+        <p class="gate-copy" id="welcomeCopy">We will follow the hidden global pricing network, product evidence, the Global Value Frontier, the payer War Room and the final negotiation brief. <strong>Germany and TAK-279 are illustrative examples only; the same framework is designed to work across markets, products, indications and launch decisions.</strong> Please note all numbers and facts mentioned are for the sake of ideation and do not represent real-life facts. From the next page, use the player at the bottom of the screen to pause, resume or replay at any time.</p>
+        <div class="gate-journey" aria-label="Walkthrough agenda"><span><b>01</b> Network</span><span><b>02</b> Evidence</span><span><b>03</b> Value Frontier</span><span><b>04</b> War Room</span><span><b>05</b> Brief</span><span><b>06</b> Impact</span></div>
+      </div>
       <div class="gate-actions">
-        <button class="gate-btn primary" id="startGuidedBtn" type="button"><span class="gate-play" aria-hidden="true"></span><span>Yes — start guided walkthrough</span></button>
+        <button class="gate-btn primary" id="startGuidedBtn" type="button"><span class="gate-play" aria-hidden="true"></span><span id="startGuidedLabel">Yes — start guided walkthrough</span></button>
         <button class="gate-btn secondary" id="startManualBtn" type="button"><span class="gate-manual" aria-hidden="true">✦</span><span>No — explore manually</span></button>
       </div>
-      <div class="gate-foot"><strong>Guided starts the section narration immediately.</strong> Manual unlocks the system, while every section keeps its own “Start walkthrough” control.</div>
+      <div class="gate-foot" id="gateFoot"><strong>Guided starts the section narration immediately.</strong> Manual unlocks the system, while every section keeps its own “Start walkthrough” control.</div>
     </div>
   </div>
 </div>
@@ -899,14 +1021,18 @@ img,svg,canvas,video{max-width:100%}
   </aside>
 </div>
 
-<audio id="welcomeAudio" preload="auto" autoplay playsinline src="audio/1_welcome_intro.mp3" aria-label="AI-generated welcome narration"></audio>
-<audio id="audio0" preload="auto" playsinline src="audio/section_0.mp3"></audio>
-<audio id="audio1" preload="auto" playsinline src="audio/section_1.mp3"></audio>
-<audio id="audio2" preload="auto" playsinline src="audio/section_2.mp3"></audio>
-<audio id="audio3" preload="auto" playsinline src="audio/section_3.mp3"></audio>
-<audio id="audio4" preload="auto" playsinline src="audio/section_4.mp3"></audio>
-<audio id="audio5" preload="auto" playsinline src="audio/section_5.mp3"></audio>
-<audio id="audio6" preload="auto" playsinline src="audio/section_6.mp3"></audio>
+<!-- Narration is loaded directly from the deployed ./audio folder.
+     The version query prevents phones/tablets from reusing an older cached MP3 after deployment. -->
+<audio id="welcomeAudio" preload="auto" autoplay playsinline aria-label="AI-generated welcome narration">
+  <source src="./audio/1_welcome_intro.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" />
+</audio>
+<audio id="audio0" preload="auto" playsinline><source src="./audio/section_0.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio1" preload="auto" playsinline><source src="./audio/section_1.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio2" preload="auto" playsinline><source src="./audio/section_2.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio3" preload="auto" playsinline><source src="./audio/section_3.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio4" preload="auto" playsinline><source src="./audio/section_4.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio5" preload="auto" playsinline><source src="./audio/section_5.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
+<audio id="audio6" preload="auto" playsinline><source src="./audio/section_6.mp3?v=20260615-mobile-audio-fix-1" type="audio/mpeg" /></audio>
 
 <script>
 (() => {
@@ -930,6 +1056,15 @@ const CHAPTERS = [
   {name:'From reactive to predictive', panel:'impact', caption:'Validate the capability retrospectively before applying it to a live launch.'}
 ];
 const audio = CHAPTERS.map((_,i)=>$('#audio'+i));
+const AUDIO_RELOAD_TOKEN=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+function folderAudioUrl(file){return './audio/'+file+'?reload='+AUDIO_RELOAD_TOKEN}
+audio.forEach((element,index)=>{
+  if(!element)return;
+  element.src=folderAudioUrl('section_'+index+'.mp3');
+  element.preload='auto';
+  element.setAttribute('playsinline','');
+  try{element.load()}catch(error){}
+});
 const durations = [...FALLBACK_DURATIONS];
 let audioAvailable = true;
 let audioEnabled = false;
@@ -1052,30 +1187,68 @@ function updateMarker(price){
 function setPanel(name){
   panels.forEach(p=>p.classList.toggle('active',p.dataset.panel===name));
 }
+function compactWalkthroughViewport(){return matchMedia('(max-width:1100px)').matches}
+function scrollStageIntoView(behavior=reduced?'auto':'smooth'){
+  const stage=$('#stage');
+  if(!stage)return;
+  const offset=innerWidth<=760?60:76;
+  const top=Math.max(0,stage.getBoundingClientRect().top+scrollY-offset);
+  scrollTo({top,behavior});
+}
 function setStory(index, doScroll=true){
   current=clamp(index,0,CHAPTERS.length-1); fired.clear(); cancelAutoAnimation(); clearFocus(); resetChapterVisuals(current);
   storySteps.forEach((s,i)=>s.classList.toggle('is-current',i===current));
   stageTabs.forEach((b,i)=>b.classList.toggle('active',i===current));
   setPanel(CHAPTERS[current].panel);
+  const activePanel=$('.panel.active');
+  if(activePanel)activePanel.scrollTop=0;
   $('#stageKicker').textContent=String(current+1).padStart(2,'0')+' · '+CHAPTERS[current].name;
   $('#chapterNo').textContent=String(current+1).padStart(2,'0'); $('#chapterName').textContent=CHAPTERS[current].name;
   $('#caption').textContent=CHAPTERS[current].caption;
-  if(doScroll){ignoreScroll=true;storySteps[current].scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});setTimeout(()=>ignoreScroll=false,850)}
+  if(doScroll){
+    ignoreScroll=true;
+    if(compactWalkthroughViewport())scrollStageIntoView();
+    else storySteps[current].scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});
+    setTimeout(()=>ignoreScroll=false,850);
+  }
 }
 
+let focusPlacementToken=0;
 function clearFocus(){
+  focusPlacementToken++;
   $$('.guide-focus').forEach(e=>e.classList.remove('guide-focus')); cursor.classList.remove('show','click');
 }
 function focusTarget(selector,click=false){
-  clearFocus(); const el=$(selector); if(!el)return; el.classList.add('guide-focus');
-  const r=el.getBoundingClientRect();
-  const margin=16, pointerHalf=14;
-  let x=r.right+margin, y=r.top+Math.min(18,Math.max(10,r.height*.18));
-  if(x>innerWidth-pointerHalf) x=r.left-margin;
-  if(x<pointerHalf) x=Math.min(innerWidth-pointerHalf,r.right-margin);
-  y=clamp(y,pointerHalf,innerHeight-pointerHalf);
-  cursor.style.left=x+'px';cursor.style.top=y+'px';cursor.classList.add('show');
-  if(click){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click')}
+  clearFocus();
+  const el=$(selector);
+  if(!el)return;
+  const token=focusPlacementToken;
+  el.classList.add('guide-focus');
+  const panel=el.closest('.panel.active');
+  let moved=false;
+  if(panel&&panel.scrollHeight>panel.clientHeight+3){
+    const panelRect=panel.getBoundingClientRect();
+    const elementRect=el.getBoundingClientRect();
+    const safeTop=panelRect.top+12;
+    const safeBottom=panelRect.bottom-18;
+    if(elementRect.top<safeTop||elementRect.bottom>safeBottom){
+      const desired=panel.scrollTop+(elementRect.top-panelRect.top)-(panel.clientHeight-elementRect.height)/2;
+      panel.scrollTo({top:clamp(desired,0,panel.scrollHeight-panel.clientHeight),behavior:reduced?'auto':'smooth'});
+      moved=true;
+    }
+  }
+  const placeCursor=()=>{
+    if(token!==focusPlacementToken||!el.isConnected)return;
+    const r=el.getBoundingClientRect();
+    const margin=16,pointerHalf=14;
+    let x=r.right+margin,y=r.top+Math.min(18,Math.max(10,r.height*.18));
+    if(x>innerWidth-pointerHalf)x=r.left-margin;
+    if(x<pointerHalf)x=Math.min(innerWidth-pointerHalf,r.right-margin);
+    y=clamp(y,pointerHalf,innerHeight-pointerHalf);
+    cursor.style.left=x+'px';cursor.style.top=y+'px';cursor.classList.add('show');
+    if(click){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click')}
+  };
+  if(moved&&!reduced)setTimeout(placeCursor,430);else requestAnimationFrame(placeCursor);
 }
 function cancelAutoAnimation(){if(activeAnimation){cancelAnimationFrame(activeAnimation);activeAnimation=null}}
 function animatePrice(to,duration=1800){
@@ -1382,20 +1555,59 @@ function attemptAutoplay(reason='initial'){
 }
 
 
-const WELCOME_NARRATION = 'Dear visitor, please allow me six minutes to walk you through the system end to end. We will follow the hidden global pricing network, the product evidence, the Global Value Frontier, the payer War Room, and the final negotiation brief. Germany and TAK-279 are used as an illustrative example, but AccessTwin is not confined to one country or one product; the same framework is designed to work across markets, products, indications, and launch decisions. From the next page, you can pause, resume, or replay me at any time using the player at the bottom of the screen. Choose Guided to begin the narration immediately, or choose Manual to explore freely and start the walkthrough for any section when you are ready.';
 const welcomeAudio=$('#welcomeAudio');
+if(welcomeAudio){
+  welcomeAudio.src=folderAudioUrl('1_welcome_intro.mp3');
+  welcomeAudio.preload='auto';
+  welcomeAudio.autoplay=true;
+  welcomeAudio.setAttribute('playsinline','');
+  try{welcomeAudio.load()}catch(error){}
+}
+const startGuidedBtn=$('#startGuidedBtn');
+const startGuidedLabel=$('#startGuidedLabel');
+const gateFoot=$('#gateFoot');
 let welcomeNarrationStopped=false;
 let welcomeNarrationStarted=false;
-let welcomeAutoplayRetryArmed=false;
+let welcomeNarrationEnded=false;
+let welcomeAutoplayBlocked=false;
+let welcomeAudioFailed=false;
+let continueToGuidedAfterWelcome=false;
+let welcomeRetryTimer=null;
+let welcomeRetryCount=0;
 
 function setWelcomeSpeaking(active){
   $('#welcomeGate')?.classList.toggle('intro-speaking',!!active);
 }
 
-function playOpenAIWelcomeAudio(){
-  if(welcomeNarrationStopped||!welcomeAudio)return Promise.resolve(false);
+function setWelcomeCopy(mode){
+  if(!startGuidedLabel||!gateFoot)return;
+  if(mode==='needs-gesture'){
+    startGuidedLabel.textContent='Start guided walkthrough';
+    gateFoot.innerHTML='<strong>Sara’s MP3 is loaded directly from the audio folder.</strong> If this browser blocks automatic sound, Guided will start it through the same control—no browser text-to-speech is used.';
+  }else if(mode==='playing'){
+    startGuidedLabel.textContent='Skip intro & start guided walkthrough';
+    gateFoot.innerHTML='<strong>Sara is playing the welcome introduction.</strong> Let it finish, or continue directly to the guided walkthrough.';
+  }else if(mode==='ended'){
+    startGuidedLabel.textContent='Start guided walkthrough';
+    gateFoot.innerHTML='<strong>Welcome introduction complete.</strong> Continue to the guided walkthrough, or explore manually.';
+  }else if(mode==='failed'){
+    startGuidedLabel.textContent='Start guided walkthrough';
+    gateFoot.innerHTML='<strong>The welcome MP3 could not be loaded.</strong> Confirm that <code>audio/1_welcome_intro.mp3</code> is deployed beside this HTML file.';
+  }else{
+    startGuidedLabel.textContent='Yes — start guided walkthrough';
+    gateFoot.innerHTML='<strong>Guided starts the section narration immediately.</strong> Manual unlocks the system, while every section keeps its own “Start walkthrough” control.';
+  }
+}
+
+function isWelcomeAutoplayPolicyError(error){
+  const name=String(error?.name||'');
+  const message=String(error?.message||'');
+  return name==='NotAllowedError'||name==='SecurityError'||/gesture|autoplay|not allowed/i.test(message);
+}
+
+function playWelcomeFileAudio(){
+  if(welcomeNarrationStopped||!welcomeAudio||welcomeAudioFailed)return Promise.resolve(false);
   welcomeAudio.preload='auto';
-  welcomeAudio.autoplay=true;
   welcomeAudio.muted=false;
   welcomeAudio.defaultMuted=false;
   welcomeAudio.volume=1;
@@ -1404,38 +1616,60 @@ function playOpenAIWelcomeAudio(){
     return attempt.then(()=>{
       if(welcomeNarrationStopped){welcomeAudio.pause();return false}
       welcomeNarrationStarted=true;
+      welcomeNarrationEnded=false;
+      welcomeAutoplayBlocked=false;
       setWelcomeSpeaking(true);
+      setWelcomeCopy('playing');
       return true;
     });
   }
   welcomeNarrationStarted=true;
+  welcomeNarrationEnded=false;
+  welcomeAutoplayBlocked=false;
   setWelcomeSpeaking(true);
+  setWelcomeCopy('playing');
   return Promise.resolve(true);
 }
 
-function armWelcomeAudioRetry(){
-  if(welcomeAutoplayRetryArmed||welcomeNarrationStopped)return;
-  welcomeAutoplayRetryArmed=true;
-  const retry=()=>{
-    welcomeAutoplayRetryArmed=false;
-    if(welcomeNarrationStopped)return;
-    playOpenAIWelcomeAudio().catch(()=>setWelcomeSpeaking(false));
-  };
-  // Browser policies can block audible autoplay. Any ordinary interaction with the
-  // welcome screen retries the same OpenAI-generated MP3; no browser TTS is used.
-  document.addEventListener('pointerdown',retry,{once:true,capture:true});
-  document.addEventListener('keydown',retry,{once:true,capture:true});
+function scheduleWelcomeRetry(){
+  clearTimeout(welcomeRetryTimer);
+  if(welcomeNarrationStopped||welcomeNarrationStarted||welcomeNarrationEnded||welcomeAudioFailed||welcomeRetryCount>=4)return;
+  const delays=[180,520,1100,1900];
+  welcomeRetryTimer=setTimeout(()=>{
+    welcomeRetryCount++;
+    playWelcomeFileAudio().catch(error=>{
+      setWelcomeSpeaking(false);
+      if(isWelcomeAutoplayPolicyError(error)){
+        welcomeAutoplayBlocked=true;
+        setWelcomeCopy('needs-gesture');
+      }else{
+        console.warn('Welcome narration MP3 could not play:',welcomeAudio?.currentSrc||welcomeAudio?.src,error);
+      }
+      scheduleWelcomeRetry();
+    });
+  },delays[Math.min(welcomeRetryCount,delays.length-1)]);
 }
-
 function startWelcomeNarration(){
   welcomeNarrationStopped=false;
   welcomeNarrationStarted=false;
+  welcomeNarrationEnded=false;
+  welcomeAutoplayBlocked=false;
+  welcomeRetryCount=0;
   if(!welcomeAudio){setWelcomeSpeaking(false);return}
-  try{welcomeAudio.currentTime=0}catch(error){}
-  setWelcomeSpeaking(true);
-  playOpenAIWelcomeAudio().catch(()=>{
+  try{
+    welcomeAudio.currentTime=0;
+    welcomeAudio.load();
+  }catch(error){}
+  setWelcomeCopy('default');
+  playWelcomeFileAudio().catch(error=>{
     setWelcomeSpeaking(false);
-    armWelcomeAudioRetry();
+    if(isWelcomeAutoplayPolicyError(error)){
+      welcomeAutoplayBlocked=true;
+      setWelcomeCopy('needs-gesture');
+    }else{
+      console.warn('Welcome narration MP3 could not play:',welcomeAudio.currentSrc||welcomeAudio.src,error);
+    }
+    scheduleWelcomeRetry();
   });
 }
 
@@ -1450,21 +1684,37 @@ function stopWelcomeNarration(){
 
 if(welcomeAudio){
   welcomeAudio.addEventListener('playing',()=>{
-    if(!welcomeNarrationStopped){welcomeNarrationStarted=true;setWelcomeSpeaking(true)}
+    if(!welcomeNarrationStopped){
+      welcomeNarrationStarted=true;
+      welcomeNarrationEnded=false;
+      setWelcomeSpeaking(true);
+      setWelcomeCopy('playing');
+    }
   });
   welcomeAudio.addEventListener('pause',()=>{
     if(!welcomeNarrationStopped&&!welcomeAudio.ended)setWelcomeSpeaking(false);
   });
-  welcomeAudio.addEventListener('ended',()=>setWelcomeSpeaking(false));
-  welcomeAudio.addEventListener('error',()=>{
+  welcomeAudio.addEventListener('ended',()=>{
+    welcomeNarrationStarted=false;
+    welcomeNarrationEnded=true;
     setWelcomeSpeaking(false);
-    console.warn('OpenAI welcome narration file failed to load:',welcomeAudio.currentSrc||welcomeAudio.src);
-  },{once:true});
-  welcomeAudio.addEventListener('canplaythrough',()=>{
-    if(!welcomeNarrationStopped&&!welcomeNarrationStarted)playOpenAIWelcomeAudio().catch(()=>armWelcomeAudioRetry());
+    setWelcomeCopy('ended');
+    if(continueToGuidedAfterWelcome){
+      continueToGuidedAfterWelcome=false;
+      setTimeout(()=>{closeWelcomeGate();startGuidedChapter(0)},220);
+    }
+  });
+  welcomeAudio.addEventListener('canplay',()=>{
+    if(!welcomeNarrationStopped&&!welcomeNarrationStarted&&!welcomeNarrationEnded)playWelcomeFileAudio().catch(()=>{});
+  });
+  welcomeAudio.addEventListener('error',()=>{
+    welcomeAudioFailed=true;
+    welcomeNarrationStarted=false;
+    setWelcomeSpeaking(false);
+    setWelcomeCopy('failed');
+    console.warn('Welcome narration file failed to load from the audio folder:',welcomeAudio.currentSrc||welcomeAudio.src);
   },{once:true});
 }
-
 
 
 function closeWelcomeGate(){
@@ -1523,11 +1773,29 @@ function enterManualExperience(){
   setStory(0,false);
   showCompletedState(0);
   updatePlayer();
-  storySteps[0].scrollIntoView({behavior:'auto',block:'center'});
+  scrollStageIntoView('auto');
 }
 
 /* interactions */
-$('#startGuidedBtn').addEventListener('click',()=>{stopWelcomeNarration();closeWelcomeGate();startGuidedChapter(0)});
+startGuidedBtn.addEventListener('click',()=>{
+  // If a mobile browser blocked audible autoplay, one Guided tap starts the real MP3
+  // and automatically continues into chapter one when the introduction ends.
+  if(welcomeAutoplayBlocked&&!welcomeNarrationStarted&&!welcomeNarrationEnded&&!welcomeAudioFailed){
+    continueToGuidedAfterWelcome=true;
+    startGuidedLabel.textContent='Starting guided walkthrough after intro…';
+    playWelcomeFileAudio().catch(error=>{
+      console.warn('Welcome narration could not start after user gesture:',error);
+      continueToGuidedAfterWelcome=false;
+      closeWelcomeGate();
+      startGuidedChapter(0);
+    });
+    return;
+  }
+  continueToGuidedAfterWelcome=false;
+  stopWelcomeNarration();
+  closeWelcomeGate();
+  startGuidedChapter(0);
+});
 $('#startManualBtn').addEventListener('click',()=>{stopWelcomeNarration();closeWelcomeGate();enterManualExperience()});
 $('#chapterStartBtn').addEventListener('click',()=>startGuidedChapter(current));
 $('#playBtn').addEventListener('click',()=>playing?pause():resume());
@@ -1658,13 +1926,28 @@ selectMarket('DE',false,false);
 showCompletedState(0);
 updatePlayer();
 lastTick=performance.now();
-storySteps[0].scrollIntoView({behavior:'auto',block:'center'});
+scrollStageIntoView('auto');
 startWelcomeNarration();
+addEventListener('pageshow',()=>{
+  if(document.body.classList.contains('intro-open')&&!welcomeNarrationStarted&&!welcomeNarrationEnded){
+    playWelcomeFileAudio().catch(()=>scheduleWelcomeRetry());
+  }
+},{passive:true});
+addEventListener('load',()=>{
+  if(document.body.classList.contains('intro-open')&&!welcomeNarrationStarted&&!welcomeNarrationEnded){
+    playWelcomeFileAudio().catch(()=>scheduleWelcomeRetry());
+  }
+},{once:true,passive:true});
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&document.body.classList.contains('intro-open')&&!welcomeNarrationStarted&&!welcomeNarrationEnded){
+    playWelcomeFileAudio().catch(()=>scheduleWelcomeRetry());
+  }
+});
 raf=requestAnimationFrame(tick);
-// The welcome gate intentionally supplies the real user gesture required by modern
-// browsers for audible playback. Nothing progresses behind the gate. Choosing the
-// guided option starts chapter 1 and narration in the same click task; choosing manual
-// mode unlocks the full system and preserves a start control on every section.
+// Every narration track is loaded from ./audio with a reload-specific URL. No speech
+// synthesis, browser reader or generated fallback is used. Audible autoplay is attempted
+// immediately and retried on page lifecycle events; browsers that prohibit it still require
+// a user activation by platform policy, which the single Guided control handles gracefully.
 })();
 </script>
 </body>
